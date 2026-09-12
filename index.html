@@ -63,7 +63,7 @@ label{
   color:var(--charcoal);
   margin:0 0 6px;
 }
-input[type="text"],input[type="tel"],input[type="date"]{
+input[type="text"],input[type="tel"],input[type="date"],input[type="number"],select{
   width:100%;
   height:44px;
   border:1px solid var(--line);
@@ -74,7 +74,7 @@ input[type="text"],input[type="tel"],input[type="date"]{
   color:var(--charcoal);
   background:var(--bone-2);
 }
-input:focus{
+input:focus,select:focus{
   outline:none;
   border-color:var(--wine-700);
 }
@@ -111,11 +111,11 @@ input:focus{
 }
 .item-row{
   display:grid;
-  grid-template-columns:2fr 1fr 2fr;
+  grid-template-columns:1.8fr 0.8fr 1fr 1.6fr;
   gap:8px;
   margin-bottom:8px;
 }
-.item-row input{font-size:14px;}
+.item-row input,.item-row select{font-size:14px;padding:0 8px;}
 #add-item{
   margin-top:4px;
   height:40px;
@@ -267,7 +267,8 @@ function criarLinhaItem(){
   linha.className = "item-row";
   linha.innerHTML =
     '<input type="text" list="produtos-list" class="item-produto" placeholder="Picanha, fraldinha, linguiça...">' +
-    '<input type="text" class="item-qtd" placeholder="1kg, 2 unidades...">' +
+    '<input type="number" step="0.1" min="0" class="item-qtd" placeholder="Qtd">' +
+    '<select class="item-unidade"><option value="Kg">Kg</option><option value="Unidade">Unidade</option><option value="Peça">Peça</option></select>' +
     '<input type="text" class="item-obs" placeholder="Sem osso, moída na hora...">';
   itensLista.appendChild(linha);
 }
@@ -320,9 +321,10 @@ form.addEventListener("submit", function(evento){
   linhas.forEach(function(linha){
     var produto = linha.querySelector(".item-produto").value.trim();
     var qtd = linha.querySelector(".item-qtd").value.trim();
+    var unidade = linha.querySelector(".item-unidade").value;
     var obs = linha.querySelector(".item-obs").value.trim();
-    if (produto && qtd){
-      itens.push({ produto: produto, quantidade: qtd, observacao: obs });
+    if (produto && qtd && Number(qtd) > 0){
+      itens.push({ produto: produto, quantidade: Number(qtd), unidade: unidade, observacao: obs });
     }
   });
 
