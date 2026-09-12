@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Center Carnes Boizão Du Capricho — Pedido para retirada</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3C0E0A">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Center Carnes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -164,6 +170,17 @@ input:focus,select:focus{
   font-size:15px;
   margin:0;
 }
+#btn-sair{
+  margin-top:20px;
+  height:44px;
+  padding:0 24px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--bone-2);
+  font-family:var(--sans);
+  font-size:15px;
+  cursor:pointer;
+}
 </style>
 </head>
 <body>
@@ -214,6 +231,7 @@ input:focus,select:focus{
     <div class="confirmacao" id="confirmacao">
       <h2>Pedido enviado!</h2>
       <p>O açougue recebeu seu pedido e já está preparando.</p>
+      <button type="button" id="btn-sair">Sair</button>
     </div>
 
   </div>
@@ -226,6 +244,16 @@ input:focus,select:focus{
 var SUPABASE_URL = "https://szkknvtqptdeffknnllx.supabase.co";
 var SUPABASE_KEY = "sb_publishable_nw_LqaqXO9gcF8ybA3vrVg_qtYfATdE";
 var CANAL_PEDIDOS = "acougue-center-carnes-pedidos";
+
+if ("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js");
+}
+
+document.getElementById("btn-sair").addEventListener("click", function(){
+  window.close();
+  document.getElementById("confirmacao").innerHTML =
+    "<h2>Pedido enviado!</h2><p>Pode fechar esta aba agora.</p>";
+});
 
 var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 var canal = supabaseClient.channel(CANAL_PEDIDOS);
