@@ -165,6 +165,43 @@ input:focus,select:focus{
   font-size:20px;
   margin:0 0 8px;
 }
+.produto-wrap{position:relative;}
+.sugestoes{
+  display:none;
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  right:0;
+  background:var(--bone-2);
+  border:1px solid var(--line);
+  border-radius:8px;
+  max-height:180px;
+  overflow-y:auto;
+  z-index:20;
+}
+.sugestao-item{
+  padding:10px 12px;
+  font-size:14px;
+  cursor:pointer;
+}
+.sugestao-item:hover,.sugestao-item:active{background:var(--bone);}
+.aviso-ios{
+  display:none;
+  background:var(--wine-900);
+  color:var(--bone-2);
+  font-size:13px;
+  padding:10px 16px;
+  text-align:center;
+}
+.aviso-ios button{
+  background:none;
+  border:none;
+  color:var(--bone-2);
+  text-decoration:underline;
+  font-size:13px;
+  margin-left:8px;
+  cursor:pointer;
+}
 .confirmacao p{
   color:var(--charcoal);
   font-size:15px;
@@ -184,6 +221,11 @@ input:focus,select:focus{
 </style>
 </head>
 <body>
+
+<div class="aviso-ios" id="aviso-ios">
+  Instale este app: toque em Compartilhar e depois em "Adicionar à Tela de Início".
+  <button type="button" id="fechar-aviso-ios">Fechar</button>
+</div>
 
 <header>
   <h1>Center Carnes Boizão Du Capricho</h1>
@@ -237,7 +279,6 @@ input:focus,select:focus{
   </div>
 </main>
 
-<datalist id="produtos-list"></datalist>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -248,6 +289,19 @@ var CANAL_PEDIDOS = "acougue-center-carnes-pedidos";
 if ("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js");
 }
+
+var ehIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+var jaInstalado = window.navigator.standalone === true;
+var avisoFechado = localStorage.getItem("avisoIosFechado") === "1";
+
+if (ehIOS && !jaInstalado && !avisoFechado){
+  document.getElementById("aviso-ios").style.display = "block";
+}
+document.getElementById("fechar-aviso-ios").addEventListener("click", function(){
+  document.getElementById("aviso-ios").style.display = "none";
+  localStorage.setItem("avisoIosFechado", "1");
+});
 
 document.getElementById("btn-sair").addEventListener("click", function(){
   window.close();
@@ -281,20 +335,16 @@ var produtos = [
   "Bacon"
 ];
 
-var listaProdutos = document.getElementById("produtos-list");
-produtos.forEach(function(p){
-  var opt = document.createElement("option");
-  opt.value = p;
-  listaProdutos.appendChild(opt);
-});
-
 var itensLista = document.getElementById("itens-lista");
 
 function criarLinhaItem(){
   var linha = document.createElement("div");
   linha.className = "item-row";
   linha.innerHTML =
-    '<input type="text" list="produtos-list" class="item-produto" placeholder="Picanha, fraldinha, linguiça...">' +
+    '<div class="produto-wrap">' +
+      '<input type="text" class="item-produto" placeholder="Picanha, fraldinha, linguiça..." autocomplete="off">' +
+      '<div class="sugestoes"></div>' +
+    '</div>' +
     '<input type="number" step="0.1" min="0" class="item-qtd" placeholder="Qtd">' +
     '<select class="item-unidade"><option value="Kg">Kg</option><option value="Unidade">Unidade</option><option value="Peça">Peça</option></select>' +
     '<input type="text" class="item-obs" placeholder="Sem osso, moída na hora...">';
@@ -302,6 +352,45 @@ function criarLinhaItem(){
 }
 for (var i = 0; i < 5; i++){ criarLinhaItem(); }
 document.getElementById("add-item").addEventListener("click", criarLinhaItem);
+
+function fecharTodasSugestoes(){
+  document.querySelectorAll(".sugestoes").forEach(function(lista){
+    lista.style.display = "none";
+    lista.innerHTML = "";
+  });
+}
+
+itensLista.addEventListener("input", function(evento){
+  if (!evento.target.classList.contains("item-produto")){ return; }
+  var input = evento.target;
+  var wrap = input.closest(".produto-wrap");
+  var lista = wrap.querySelector(".sugestoes");
+  var termo = input.value.trim().toLowerCase();
+  fecharTodasSugestoes();
+  if (!termo){ return; }
+  var resultados = produtos.filter(function(p){
+    return p.toLowerCase().indexOf(termo) !== -1;
+  }).slice(0, 6);
+  if (resultados.length === 0){ return; }
+  resultados.forEach(function(p){
+    var opcao = document.createElement("div");
+    opcao.className = "sugestao-item";
+    opcao.textContent = p;
+    lista.appendChild(opcao);
+  });
+  lista.style.display = "block";
+});
+
+itensLista.addEventListener("click", function(evento){
+  if (!evento.target.classList.contains("sugestao-item")){ return; }
+  var wrap = evento.target.closest(".produto-wrap");
+  wrap.querySelector(".item-produto").value = evento.target.textContent;
+  fecharTodasSugestoes();
+});
+
+document.addEventListener("click", function(evento){
+  if (!evento.target.closest(".produto-wrap")){ fecharTodasSugestoes(); }
+});
 
 var periodoSelecionado = null;
 var btnManha = document.getElementById("btn-manha");
