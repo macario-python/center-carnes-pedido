@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Center Carnes Boizão Du Capricho — Pedido para retirada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@500;700&family=Work+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wine-900:#3C0E0A;
+  --wine-700:#6B1B12;
+  --bone:#F2E9DC;
+  --bone-2:#FFFFFF;
+  --charcoal:#241C18;
+  --mustard:#C68A2E;
+  --line:rgba(36,28,24,0.16);
+  --radius:10px;
+  --serif:'Roboto Slab', Georgia, serif;
+  --sans:'Work Sans','Segoe UI',Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  background:var(--bone);
+  color:var(--charcoal);
+  -webkit-font-smoothing:antialiased;
+}
+header{
+  background:var(--wine-900);
+  color:var(--bone-2);
+  padding:28px 20px 24px;
+  text-align:center;
+}
+header h1{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:26px;
+  margin:0 0 6px;
+  letter-spacing:0.2px;
+}
+header p{
+  margin:0;
+  font-size:14px;
+  color:rgba(242,233,220,0.82);
+}
+main{
+  max-width:640px;
+  margin:-18px auto 40px;
+  padding:0 16px;
+}
+.card{
+  background:var(--bone-2);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:24px 20px;
+}
+label{
+  display:block;
+  font-size:13px;
+  font-weight:500;
+  color:var(--charcoal);
+  margin:0 0 6px;
+}
+input[type="text"],input[type="tel"],input[type="date"]{
+  width:100%;
+  height:44px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:0 12px;
+  font-size:15px;
+  font-family:var(--sans);
+  color:var(--charcoal);
+  background:var(--bone-2);
+}
+input:focus{
+  outline:none;
+  border-color:var(--wine-700);
+}
+.row2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-bottom:16px;
+}
+.field{margin-bottom:16px;}
+.periodo-opcoes{display:flex;gap:8px;}
+.periodo-btn{
+  flex:1;
+  height:44px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--bone-2);
+  font-family:var(--sans);
+  font-size:15px;
+  cursor:pointer;
+}
+.periodo-btn.ativo{
+  border:2px solid var(--wine-700);
+  background:rgba(107,27,18,0.06);
+  color:var(--wine-700);
+  font-weight:500;
+}
+.itens-titulo{
+  font-family:var(--serif);
+  font-size:16px;
+  font-weight:500;
+  margin:24px 0 12px;
+  color:var(--wine-900);
+}
+.item-row{
+  display:grid;
+  grid-template-columns:2fr 1fr 2fr;
+  gap:8px;
+  margin-bottom:8px;
+}
+.item-row input{font-size:14px;}
+#add-item{
+  margin-top:4px;
+  height:40px;
+  padding:0 16px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--bone-2);
+  font-family:var(--sans);
+  font-size:14px;
+  cursor:pointer;
+}
+.erro{
+  color:#A32D2D;
+  font-size:13px;
+  margin:-10px 0 14px;
+  display:none;
+}
+#btn-enviar{
+  width:100%;
+  height:50px;
+  margin-top:24px;
+  border:none;
+  border-radius:var(--radius);
+  background:var(--wine-700);
+  color:var(--bone-2);
+  font-family:var(--sans);
+  font-size:16px;
+  font-weight:500;
+  cursor:pointer;
+}
+#btn-enviar:active{transform:scale(0.99);}
+#btn-enviar:disabled{opacity:0.6;cursor:default;}
+.confirmacao{
+  display:none;
+  text-align:center;
+  padding:20px 0;
+}
+.confirmacao h2{
+  font-family:var(--serif);
+  color:var(--wine-900);
+  font-size:20px;
+  margin:0 0 8px;
+}
+.confirmacao p{
+  color:var(--charcoal);
+  font-size:15px;
+  margin:0;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Center Carnes Boizão Du Capricho</h1>
+  <p>Pedido para retirada</p>
+</header>
+
+<main>
+  <div class="card">
+
+    <form id="form-pedido">
+      <div class="row2">
+        <div>
+          <label for="nome">Nome completo</label>
+          <input type="text" id="nome" placeholder="Seu nome">
+        </div>
+        <div>
+          <label for="telefone">Telefone</label>
+          <input type="tel" id="telefone" placeholder="(11) 99999-0000">
+        </div>
+      </div>
+
+      <div class="row2">
+        <div>
+          <label for="data-retirada">Data de retirada</label>
+          <input type="date" id="data-retirada">
+        </div>
+        <div>
+          <label>Período</label>
+          <div class="periodo-opcoes">
+            <button type="button" class="periodo-btn" id="btn-manha">Manhã</button>
+            <button type="button" class="periodo-btn" id="btn-tarde">Tarde</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="itens-titulo">Itens do pedido</p>
+      <div id="itens-lista"></div>
+      <button type="button" id="add-item">+ Adicionar item</button>
+
+      <p class="erro" id="msg-erro"></p>
+
+      <button type="submit" id="btn-enviar">Enviar pedido</button>
+    </form>
+
+    <div class="confirmacao" id="confirmacao">
+      <h2>Pedido enviado!</h2>
+      <p>O açougue recebeu seu pedido e já está preparando.</p>
+    </div>
+
+  </div>
+</main>
+
+<datalist id="produtos-list"></datalist>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+var SUPABASE_URL = "https://szkknvtqptdeffknnllx.supabase.co";
+var SUPABASE_KEY = "sb_publishable_nw_LqaqXO9gcF8ybA3vrVg_qtYfATdE";
+var CANAL_PEDIDOS = "acougue-center-carnes-pedidos";
+
+var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var canal = supabaseClient.channel(CANAL_PEDIDOS);
+canal.subscribe();
+
+var produtos = [
+  "Picanha",
+  "Alcatra",
+  "Fraldinha",
+  "Contrafilé",
+  "Costela bovina",
+  "Cupim",
+  "Maminha",
+  "Coxão mole",
+  "Coxão duro",
+  "Patinho",
+  "Acém",
+  "Carne moída",
+  "Linguiça toscana",
+  "Linguiça calabresa",
+  "Bisteca suína",
+  "Lombo suíno",
+  "Frango inteiro",
+  "Coxa e sobrecoxa",
+  "Bacon"
+];
+
+var listaProdutos = document.getElementById("produtos-list");
+produtos.forEach(function(p){
+  var opt = document.createElement("option");
+  opt.value = p;
+  listaProdutos.appendChild(opt);
+});
+
+var itensLista = document.getElementById("itens-lista");
+
+function criarLinhaItem(){
+  var linha = document.createElement("div");
+  linha.className = "item-row";
+  linha.innerHTML =
+    '<input type="text" list="produtos-list" class="item-produto" placeholder="Picanha, fraldinha, linguiça...">' +
+    '<input type="text" class="item-qtd" placeholder="1kg, 2 unidades...">' +
+    '<input type="text" class="item-obs" placeholder="Sem osso, moída na hora...">';
+  itensLista.appendChild(linha);
+}
+for (var i = 0; i < 10; i++){ criarLinhaItem(); }
+document.getElementById("add-item").addEventListener("click", criarLinhaItem);
+
+var periodoSelecionado = null;
+var btnManha = document.getElementById("btn-manha");
+var btnTarde = document.getElementById("btn-tarde");
+
+function selecionarPeriodo(valor){
+  periodoSelecionado = valor;
+  btnManha.classList.toggle("ativo", valor === "manha");
+  btnTarde.classList.toggle("ativo", valor === "tarde");
+}
+btnManha.addEventListener("click", function(){ selecionarPeriodo("manha"); });
+btnTarde.addEventListener("click", function(){ selecionarPeriodo("tarde"); });
+
+var dataRetiradaInput = document.getElementById("data-retirada");
+var hoje = new Date().toISOString().split("T")[0];
+dataRetiradaInput.min = hoje;
+
+var form = document.getElementById("form-pedido");
+var msgErro = document.getElementById("msg-erro");
+var btnEnviar = document.getElementById("btn-enviar");
+
+function mostrarErro(texto){
+  msgErro.textContent = texto;
+  msgErro.style.display = "block";
+}
+function limparErro(){
+  msgErro.style.display = "none";
+}
+
+form.addEventListener("submit", function(evento){
+  evento.preventDefault();
+  limparErro();
+
+  var nome = document.getElementById("nome").value.trim();
+  var telefone = document.getElementById("telefone").value.trim();
+  var dataRetirada = dataRetiradaInput.value;
+
+  if (!nome){ mostrarErro("Preencha seu nome."); return; }
+  if (!telefone){ mostrarErro("Preencha seu telefone."); return; }
+  if (!dataRetirada){ mostrarErro("Escolha a data de retirada."); return; }
+  if (!periodoSelecionado){ mostrarErro("Escolha o período: manhã ou tarde."); return; }
+
+  var linhas = itensLista.querySelectorAll(".item-row");
+  var itens = [];
+  linhas.forEach(function(linha){
+    var produto = linha.querySelector(".item-produto").value.trim();
+    var qtd = linha.querySelector(".item-qtd").value.trim();
+    var obs = linha.querySelector(".item-obs").value.trim();
+    if (produto && qtd){
+      itens.push({ produto: produto, quantidade: qtd, observacao: obs });
+    }
+  });
+
+  if (itens.length === 0){ mostrarErro("Adicione pelo menos um item com quantidade."); return; }
+
+  btnEnviar.disabled = true;
+  btnEnviar.textContent = "Enviando...";
+
+  canal.send({
+    type: "broadcast",
+    event: "pedido",
+    payload: {
+      nome: nome,
+      telefone: telefone,
+      data_retirada: dataRetirada,
+      periodo: periodoSelecionado,
+      itens: itens,
+      enviado_em: new Date().toISOString()
+    }
+  }).then(function(){
+    form.style.display = "none";
+    document.getElementById("confirmacao").style.display = "block";
+  }).catch(function(){
+    btnEnviar.disabled = false;
+    btnEnviar.textContent = "Enviar pedido";
+    mostrarErro("Não foi possível enviar agora. Tente novamente.");
+  });
+});
+</script>
+
+</body>
+</html>
