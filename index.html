@@ -227,6 +227,12 @@ input:focus,select:focus{
   <button type="button" id="fechar-aviso-ios">Fechar</button>
 </div>
 
+<div class="aviso-ios" id="aviso-android">
+  Instale este app na tela inicial pra pedir mais rápido da próxima vez.
+  <button type="button" id="btn-instalar-android">Instalar</button>
+  <button type="button" id="fechar-aviso-android">Agora não</button>
+</div>
+
 <header>
   <h1>Center Carnes Boizão Du Capricho</h1>
   <p>Pedido para retirada</p>
@@ -301,6 +307,30 @@ if (ehIOS && !jaInstalado && !avisoFechado){
 document.getElementById("fechar-aviso-ios").addEventListener("click", function(){
   document.getElementById("aviso-ios").style.display = "none";
   localStorage.setItem("avisoIosFechado", "1");
+});
+
+var promptInstalacao = null;
+var avisoAndroidFechado = localStorage.getItem("avisoAndroidFechado") === "1";
+
+window.addEventListener("beforeinstallprompt", function(evento){
+  evento.preventDefault();
+  promptInstalacao = evento;
+  if (!avisoAndroidFechado){
+    document.getElementById("aviso-android").style.display = "block";
+  }
+});
+
+document.getElementById("btn-instalar-android").addEventListener("click", function(){
+  document.getElementById("aviso-android").style.display = "none";
+  if (promptInstalacao){
+    promptInstalacao.prompt();
+    promptInstalacao.userChoice.then(function(){ promptInstalacao = null; });
+  }
+});
+
+document.getElementById("fechar-aviso-android").addEventListener("click", function(){
+  document.getElementById("aviso-android").style.display = "none";
+  localStorage.setItem("avisoAndroidFechado", "1");
 });
 
 document.getElementById("btn-sair").addEventListener("click", function(){
