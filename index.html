@@ -227,6 +227,12 @@ input:focus,select:focus{
   font-size:15px;
   cursor:pointer;
 }
+footer.marca-dagua{
+  text-align:center;
+  padding:18px 16px 30px;
+  font-size:12px;
+  color:rgba(36,28,24,0.55);
+}
 </style>
 </head>
 <body>
@@ -294,6 +300,9 @@ input:focus,select:focus{
   </div>
 </main>
 
+<footer class="marca-dagua">
+  <p>Sistema desenvolvido por Macario Tecnologia · (11) 98310-2813</p>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -351,6 +360,111 @@ document.getElementById("btn-sair").addEventListener("click", function(){
 var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 var canal = supabaseClient.channel(CANAL_PEDIDOS);
 canal.subscribe();
+
+var MESES_ABREV = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+function formatarDataBR(dataIso){
+  var partes = dataIso.split("-");
+  var dia = parseInt(partes[2], 10);
+  var mes = parseInt(partes[1], 10);
+  var ano = partes[0];
+  return dia + " de " + MESES_ABREV[mes - 1] + ". de " + ano;
+}
+
+function gerarEBaixarTicket(pedido){
+  var WINE = "#3C0E0A";
+  var CHARCOAL = "#241C18";
+  var LINHA_COR = "#CCCCCC";
+  var FONTE = "'Courier New', monospace";
+
+  var largura = 640;
+  var linhaAltura = 32;
+  var alturaBase = 420;
+  var alturaItens = 0;
+  pedido.itens.forEach(function(item){
+    alturaItens += linhaAltura * (item.observacao ? 2 : 1);
+  });
+  var altura = alturaBase + alturaItens;
+
+  var canvas = document.createElement("canvas");
+  var escala = 2; // resolução maior pra ficar nítido
+  canvas.width = largura * escala;
+  canvas.height = altura * escala;
+  var ctx = canvas.getContext("2d");
+  ctx.scale(escala, escala);
+
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, largura, altura);
+
+  function linhaTracejada(y){
+    ctx.strokeStyle = LINHA_COR;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(30, y);
+    ctx.lineTo(largura - 30, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  var y = 40;
+  ctx.textAlign = "center";
+
+  ctx.fillStyle = WINE;
+  ctx.font = "bold 26px " + FONTE;
+  ctx.fillText("CENTER CARNES", largura / 2, y); y += 34;
+  ctx.fillText("BOIZÃO DU CAPRICHO", largura / 2, y); y += 40;
+  linhaTracejada(y); y += 30;
+
+  ctx.fillStyle = CHARCOAL;
+  ctx.font = "18px " + FONTE;
+  ctx.fillText("Pedido enviado", largura / 2, y); y += 28;
+
+  var agora = new Date();
+  var horario = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  ctx.font = "16px " + FONTE;
+  ctx.fillText("Enviado às " + horario, largura / 2, y); y += 30;
+  linhaTracejada(y); y += 34;
+
+  ctx.textAlign = "left";
+  ctx.font = "17px " + FONTE;
+  ctx.fillText("Cliente: " + pedido.nome, 30, y); y += 28;
+  ctx.fillText("Tel: " + pedido.telefone, 30, y); y += 28;
+  var periodoTexto = pedido.periodo === "manha" ? "Manhã" : "Tarde";
+  ctx.fillText("Retirada: " + formatarDataBR(pedido.data_retirada) + " - " + periodoTexto, 30, y); y += 34;
+  ctx.textAlign = "center";
+  linhaTracejada(y); y += 34;
+
+  ctx.textAlign = "left";
+  pedido.itens.forEach(function(item){
+    ctx.font = "17px " + FONTE;
+    ctx.fillStyle = CHARCOAL;
+    ctx.fillText(item.quantidade + " " + item.unidade + " " + item.produto, 30, y);
+    y += linhaAltura;
+    if (item.observacao){
+      ctx.font = "italic 15px " + FONTE;
+      ctx.fillText("  obs: " + item.observacao, 30, y);
+      y += linhaAltura;
+    }
+  });
+
+  y += 8;
+  ctx.textAlign = "center";
+  linhaTracejada(y); y += 34;
+  ctx.fillStyle = WINE;
+  ctx.font = "16px " + FONTE;
+  ctx.fillText("Obrigado pela preferência!", largura / 2, y);
+
+  canvas.toBlob(function(blob){
+    var url = URL.createObjectURL(blob);
+    var nomeArquivo = "pedido_" + pedido.nome.replace(/\s+/g, "_") + "_" + pedido.data_retirada + ".png";
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = nomeArquivo;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, "image/png");
+}
 
 var produtos = [
   "Picanha",
@@ -489,20 +603,23 @@ form.addEventListener("submit", function(evento){
   btnEnviar.disabled = true;
   btnEnviar.textContent = "Enviando...";
 
+  var pedido = {
+    nome: nome,
+    telefone: telefone,
+    data_retirada: dataRetirada,
+    periodo: periodoSelecionado,
+    itens: itens,
+    enviado_em: new Date().toISOString()
+  };
+
   canal.send({
     type: "broadcast",
     event: "pedido",
-    payload: {
-      nome: nome,
-      telefone: telefone,
-      data_retirada: dataRetirada,
-      periodo: periodoSelecionado,
-      itens: itens,
-      enviado_em: new Date().toISOString()
-    }
+    payload: pedido
   }).then(function(){
     form.style.display = "none";
     document.getElementById("confirmacao").style.display = "block";
+    gerarEBaixarTicket(pedido);
   }).catch(function(){
     btnEnviar.disabled = false;
     btnEnviar.textContent = "Enviar pedido";
