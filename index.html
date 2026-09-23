@@ -541,7 +541,7 @@ itensLista.addEventListener("click", function(evento){
   wrap.querySelector(".item-produto").value = nome;
   linha.querySelector(".item-codigo").value = codigo;
   var infoEl = wrap.querySelector(".produto-info");
-  infoEl.textContent = "Cód. " + codigo + " · R$ " + preco.toFixed(2).replace(".", ",") + "/Kg";
+  infoEl.textContent = "Cód. " + codigo;
   infoEl.style.display = "block";
   var unidadeSelect = linha.querySelector(".item-unidade");
   if (unidadeSelect){ unidadeSelect.value = "Kg"; }
