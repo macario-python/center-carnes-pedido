@@ -223,6 +223,38 @@ input:focus,select:focus{
   font-size:15px;
   margin:0;
 }
+.resumo-pedido{
+  text-align:left;
+  background:var(--bone);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin:18px 0;
+  font-size:14px;
+  color:var(--charcoal);
+}
+.resumo-pedido div{margin-bottom:4px;}
+.resumo-itens{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);}
+.resumo-item{margin-bottom:4px;}
+.acoes-confirmacao{
+  display:flex;
+  gap:10px;
+  margin-top:18px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+#btn-compartilhar,#btn-copiar{
+  height:44px;
+  padding:0 20px;
+  border:none;
+  border-radius:var(--radius);
+  background:var(--wine-700);
+  color:var(--bone-2);
+  font-family:var(--sans);
+  font-size:14px;
+  font-weight:500;
+  cursor:pointer;
+}
 #btn-sair{
   margin-top:20px;
   height:44px;
@@ -295,6 +327,11 @@ input:focus,select:focus{
     <div class="confirmacao" id="confirmacao">
       <h2>Pedido enviado!</h2>
       <p>O açougue recebeu seu pedido e já está preparando.</p>
+      <div class="resumo-pedido" id="resumo-pedido"></div>
+      <div class="acoes-confirmacao">
+        <button type="button" id="btn-compartilhar">Compartilhar pedido</button>
+        <button type="button" id="btn-copiar">Copiar pedido</button>
+      </div>
       <button type="button" id="btn-sair">Sair</button>
     </div>
 
@@ -624,7 +661,50 @@ form.addEventListener("submit", function(evento){
     }
   }).then(function(){
     form.style.display = "none";
+
+    var linhasResumo = itens.map(function(item){
+      var codigoTxt = item.codigo ? " (Cód. " + item.codigo + ")" : "";
+      return "• " + item.quantidade + " " + item.unidade + " — " + item.produto + codigoTxt +
+        (item.observacao ? " [" + item.observacao + "]" : "");
+    }).join("\n");
+
+    var textoPedido =
+      "Center Carnes Boizão Du Capricho\n" +
+      "Pedido de " + nome + " — " + telefone + "\n" +
+      "Retirada: " + dataRetirada + " (" + periodoSelecionado + ")\n\n" +
+      "Itens:\n" + linhasResumo;
+
+    var resumoEl = document.getElementById("resumo-pedido");
+    resumoEl.innerHTML =
+      "<div><strong>Retirada:</strong> " + dataRetirada + " — " + periodoSelecionado + "</div>" +
+      "<div class=\"resumo-itens\">" +
+      itens.map(function(item){
+        var codigoTxt = item.codigo ? " <small>(Cód. " + item.codigo + ")</small>" : "";
+        var obsTxt = item.observacao ? " — " + item.observacao : "";
+        return "<div class=\"resumo-item\">" + item.quantidade + " " + item.unidade + " " + item.produto + codigoTxt + obsTxt + "</div>";
+      }).join("") +
+      "</div>";
+
     document.getElementById("confirmacao").style.display = "block";
+
+    var btnCompartilhar = document.getElementById("btn-compartilhar");
+    var btnCopiar = document.getElementById("btn-copiar");
+
+    if (navigator.share){
+      btnCompartilhar.addEventListener("click", function(){
+        navigator.share({ title: "Meu pedido - Center Carnes", text: textoPedido }).catch(function(){});
+      });
+    } else {
+      btnCompartilhar.style.display = "none";
+    }
+
+    btnCopiar.addEventListener("click", function(){
+      navigator.clipboard.writeText(textoPedido).then(function(){
+        var textoOriginal = btnCopiar.textContent;
+        btnCopiar.textContent = "Copiado!";
+        setTimeout(function(){ btnCopiar.textContent = textoOriginal; }, 2000);
+      });
+    });
   }).catch(function(){
     btnEnviar.disabled = false;
     btnEnviar.textContent = "Enviar pedido";
