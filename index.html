@@ -6,7 +6,6 @@
 <title>Center Carnes Boizão Du Capricho — Pedido para retirada</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3C0E0A">
-<link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -175,6 +174,13 @@ input:focus,select:focus{
   margin:0 0 8px;
 }
 .produto-wrap{position:relative;}
+.produto-info{
+  display:none;
+  font-size:12px;
+  font-weight:600;
+  color:var(--wine-700);
+  margin-top:3px;
+}
 .sugestoes{
   display:none;
   position:absolute;
@@ -227,12 +233,6 @@ input:focus,select:focus{
   font-family:var(--sans);
   font-size:15px;
   cursor:pointer;
-}
-footer.marca-dagua{
-  text-align:center;
-  padding:18px 16px 30px;
-  font-size:12px;
-  color:rgba(36,28,24,0.55);
 }
 </style>
 </head>
@@ -301,9 +301,6 @@ footer.marca-dagua{
   </div>
 </main>
 
-<footer class="marca-dagua">
-  <p>Sistema desenvolvido por Macario Tecnologia · (11) 98310-2813</p>
-</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -362,131 +359,125 @@ var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 var canal = supabaseClient.channel(CANAL_PEDIDOS);
 canal.subscribe();
 
-var MESES_ABREV = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
-function formatarDataBR(dataIso){
-  var partes = dataIso.split("-");
-  var dia = parseInt(partes[2], 10);
-  var mes = parseInt(partes[1], 10);
-  var ano = partes[0];
-  return dia + " de " + MESES_ABREV[mes - 1] + ". de " + ano;
-}
-
-function gerarEBaixarTicket(pedido){
-  var WINE = "#3C0E0A";
-  var CHARCOAL = "#241C18";
-  var LINHA_COR = "#CCCCCC";
-  var FONTE = "'Courier New', monospace";
-
-  var largura = 640;
-  var linhaAltura = 32;
-  var alturaBase = 420;
-  var alturaItens = 0;
-  pedido.itens.forEach(function(item){
-    alturaItens += linhaAltura * (item.observacao ? 2 : 1);
-  });
-  var altura = alturaBase + alturaItens;
-
-  var canvas = document.createElement("canvas");
-  var escala = 2; // resolução maior pra ficar nítido
-  canvas.width = largura * escala;
-  canvas.height = altura * escala;
-  var ctx = canvas.getContext("2d");
-  ctx.scale(escala, escala);
-
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillRect(0, 0, largura, altura);
-
-  function linhaTracejada(y){
-    ctx.strokeStyle = LINHA_COR;
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.moveTo(30, y);
-    ctx.lineTo(largura - 30, y);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  var y = 40;
-  ctx.textAlign = "center";
-
-  ctx.fillStyle = WINE;
-  ctx.font = "bold 26px " + FONTE;
-  ctx.fillText("CENTER CARNES", largura / 2, y); y += 34;
-  ctx.fillText("BOIZÃO DU CAPRICHO", largura / 2, y); y += 40;
-  linhaTracejada(y); y += 30;
-
-  ctx.fillStyle = CHARCOAL;
-  ctx.font = "18px " + FONTE;
-  ctx.fillText("Pedido enviado", largura / 2, y); y += 28;
-
-  var agora = new Date();
-  var horario = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-  ctx.font = "16px " + FONTE;
-  ctx.fillText("Enviado às " + horario, largura / 2, y); y += 30;
-  linhaTracejada(y); y += 34;
-
-  ctx.textAlign = "left";
-  ctx.font = "17px " + FONTE;
-  ctx.fillText("Cliente: " + pedido.nome, 30, y); y += 28;
-  ctx.fillText("Tel: " + pedido.telefone, 30, y); y += 28;
-  var periodoTexto = pedido.periodo === "manha" ? "Manhã" : "Tarde";
-  ctx.fillText("Retirada: " + formatarDataBR(pedido.data_retirada) + " - " + periodoTexto, 30, y); y += 34;
-  ctx.textAlign = "center";
-  linhaTracejada(y); y += 34;
-
-  ctx.textAlign = "left";
-  pedido.itens.forEach(function(item){
-    ctx.font = "17px " + FONTE;
-    ctx.fillStyle = CHARCOAL;
-    ctx.fillText(item.quantidade + " " + item.unidade + " " + item.produto, 30, y);
-    y += linhaAltura;
-    if (item.observacao){
-      ctx.font = "italic 15px " + FONTE;
-      ctx.fillText("  obs: " + item.observacao, 30, y);
-      y += linhaAltura;
-    }
-  });
-
-  y += 8;
-  ctx.textAlign = "center";
-  linhaTracejada(y); y += 34;
-  ctx.fillStyle = WINE;
-  ctx.font = "16px " + FONTE;
-  ctx.fillText("Obrigado pela preferência!", largura / 2, y);
-
-  canvas.toBlob(function(blob){
-    var url = URL.createObjectURL(blob);
-    var nomeArquivo = "pedido_" + pedido.nome.replace(/\s+/g, "_") + "_" + pedido.data_retirada + ".png";
-    var link = document.createElement("a");
-    link.href = url;
-    link.download = nomeArquivo;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  }, "image/png");
-}
-
 var produtos = [
-  "Picanha",
-  "Alcatra",
-  "Fraldinha",
-  "Contrafilé",
-  "Costela bovina",
-  "Cupim",
-  "Maminha",
-  "Coxão mole",
-  "Coxão duro",
-  "Patinho",
-  "Acém",
-  "Carne moída",
-  "Linguiça toscana",
-  "Linguiça calabresa",
-  "Bisteca suína",
-  "Lombo suíno",
-  "Frango inteiro",
-  "Coxa e sobrecoxa",
-  "Bacon"
+  {codigo:"0025", nome:"ACEM COM OSSO", preco:29.99},
+  {codigo:"0005", nome:"ALCATRA", preco:54.99},
+  {codigo:"0112", nome:"ALMODEGA C/ QUEIJO", preco:27.99},
+  {codigo:"0076", nome:"ALMODEGAS", preco:24.99},
+  {codigo:"0055", nome:"ASA", preco:16.99},
+  {codigo:"0073", nome:"AUROGUETES", preco:21.99},
+  {codigo:"0010", nome:"BABY BEEF", preco:59.99},
+  {codigo:"0100", nome:"BABY BIFE", preco:54.99},
+  {codigo:"0084", nome:"BACON", preco:46.99},
+  {codigo:"0113", nome:"BANHA SUINA", preco:9.99},
+  {codigo:"0038", nome:"BARRIGA", preco:16.99},
+  {codigo:"0091", nome:"BATATA", preco:17.99},
+  {codigo:"0023", nome:"BATATA DE CARINHA", preco:19.99},
+  {codigo:"0017", nome:"BIFE A ROLE", preco:39.99},
+  {codigo:"0115", nome:"BIFE ANCHO KG", preco:59.99},
+  {codigo:"0015", nome:"BIFE ESPECIAL", preco:39.99},
+  {codigo:"0074", nome:"BIG CHIKEM C QUEIJO 1KG", preco:34.99},
+  {codigo:"0088", nome:"BISTECA DA COPA", preco:13.99},
+  {codigo:"0064", nome:"BISTECA DE PERNIL", preco:11.99},
+  {codigo:"0032", nome:"BISTECA DO LOMBO", preco:16.99},
+  {codigo:"0078", nome:"BUCHO", preco:17.99},
+  {codigo:"0129", nome:"CALABRESA DEF.OLAVO", preco:13.99},
+  {codigo:"0108", nome:"CALABRESA FRIELA", preco:24.99},
+  {codigo:"0105", nome:"CALABRESA PERDIGAO", preco:27.99},
+  {codigo:"0107", nome:"CAPA DE FILE", preco:39.99},
+  {codigo:"0118", nome:"CARNE DE SOL KG", preco:49.99},
+  {codigo:"0065", nome:"CARNE SECA", preco:64.99},
+  {codigo:"0116", nome:"CHORRIZO KG", preco:69.99},
+  {codigo:"0047", nome:"CHULETA DA GAUCHA", preco:27.99},
+  {codigo:"0031", nome:"CHULETA DO CONTRA", preco:43.99},
+  {codigo:"0030", nome:"CHULETINHA", preco:28.99},
+  {codigo:"0003", nome:"CONTRA FILE", preco:57.99},
+  {codigo:"0060", nome:"CORACAO DE FRANGO 1KG AURORA", preco:37.99},
+  {codigo:"0026", nome:"COSTELA GAUCHA", preco:27.99},
+  {codigo:"0028", nome:"COSTELA RIPA", preco:35.99},
+  {codigo:"0066", nome:"COSTELA SALGADA", preco:24.99},
+  {codigo:"0033", nome:"COSTELA SUINA", preco:22.99},
+  {codigo:"0007", nome:"COX.DURO", preco:46.99},
+  {codigo:"0006", nome:"COX.MOLE", preco:46.99},
+  {codigo:"0127", nome:"COXA DE FRANGO KG", preco:10.99},
+  {codigo:"0052", nome:"COXA E SOBRE COXA", preco:10.99},
+  {codigo:"0056", nome:"COXINHA DA ASA", preco:15.99},
+  {codigo:"0014", nome:"COXINHA EMPANADA", preco:39.99},
+  {codigo:"0024", nome:"CUPIM", preco:39.99},
+  {codigo:"0111", nome:"ESTROGONOFE DE FRANGO", preco:21.99},
+  {codigo:"0058", nome:"ESTROGONOFF", preco:39.99},
+  {codigo:"0079", nome:"FIGADO", preco:19.99},
+  {codigo:"0062", nome:"FIGADO DE FRANGO", preco:4.99},
+  {codigo:"0117", nome:"FILE DE COXA C/SOBRE KG", preco:17.99},
+  {codigo:"0054", nome:"FILE DE FRANGO", preco:18.99},
+  {codigo:"0085", nome:"FILE DE MERLUZA", preco:42.99},
+  {codigo:"0037", nome:"FILE DE PERNIL", preco:17.99},
+  {codigo:"0106", nome:"FILE DE TILAPIA", preco:54.99},
+  {codigo:"0090", nome:"FILE EMPANADO", preco:31.99},
+  {codigo:"0001", nome:"FILE MIGNON", preco:71.99},
+  {codigo:"0211", nome:"FILE MIGNON SUINO", preco:25.99},
+  {codigo:"0020", nome:"FRALDINHA", preco:42.99},
+  {codigo:"0051", nome:"FRANGO APASSARINHO", preco:11.99},
+  {codigo:"0049", nome:"FRANGO INTEIRO", preco:9.99},
+  {codigo:"0050", nome:"GALINHA", preco:9.99},
+  {codigo:"0101", nome:"HAMBURGER DE COSTELA", preco:37.99},
+  {codigo:"0102", nome:"HAMBURGER DE FRALDINHA", preco:37.99},
+  {codigo:"0104", nome:"HAMBURGER DE PICANHA", preco:41.99},
+  {codigo:"0092", nome:"JOELHO", preco:9.99},
+  {codigo:"0008", nome:"LAGARTO", preco:46.99},
+  {codigo:"0016", nome:"LARGATIHO", preco:39.99},
+  {codigo:"0081", nome:"LING. DEF AURORA", preco:27.99},
+  {codigo:"0083", nome:"LING. DEF SADIA", preco:25.99},
+  {codigo:"0048", nome:"LING.APERITIVO", preco:31.99},
+  {codigo:"0046", nome:"LING.APIMENTADA", preco:21.99},
+  {codigo:"0045", nome:"LING.DE FRANGO FINA", preco:27.99},
+  {codigo:"0075", nome:"LING.DEFUMADA SEARA", preco:24.99},
+  {codigo:"0043", nome:"LING.FRANGO GROSSA", preco:22.99},
+  {codigo:"0109", nome:"LING.FRIELA", preco:15.99},
+  {codigo:"0042", nome:"LING.PERDIGAO", preco:24.99},
+  {codigo:"0040", nome:"LING.SADIA", preco:21.99},
+  {codigo:"0021", nome:"LING.SEARA.", preco:19.99},
+  {codigo:"0041", nome:"LING.TOSCANA AURORA", preco:25.99},
+  {codigo:"0126", nome:"LINGUICA CO AZEITONA KG", preco:24.99},
+  {codigo:"0125", nome:"LINGUIÇA COM QUEIJO KG", preco:24.99},
+  {codigo:"0067", nome:"LOMBO", preco:22.99},
+  {codigo:"0110", nome:"LOMBO SALGADO KG", preco:26.99},
+  {codigo:"0004", nome:"MAMINHA", preco:54.99},
+  {codigo:"0018", nome:"MIOLO DE ACEM", preco:41.99},
+  {codigo:"0077", nome:"MOCOTO", preco:12.99},
+  {codigo:"0061", nome:"MOELA DE FRANGO", preco:15.99},
+  {codigo:"0022", nome:"MOIDA D 2", preco:26.99},
+  {codigo:"0011", nome:"MUSCULO", preco:39.99},
+  {codigo:"0087", nome:"ORELHA SALGADA", preco:16.99},
+  {codigo:"0029", nome:"OSSO BUCO", preco:29.99},
+  {codigo:"0012", nome:"P.DE ALCATRA", preco:43.99},
+  {codigo:"0093", nome:"PALETA", preco:39.99},
+  {codigo:"0059", nome:"PANCETA", preco:21.99},
+  {codigo:"0009", nome:"PATINHO", preco:46.99},
+  {codigo:"0063", nome:"PE DE FRANGO", preco:11.99},
+  {codigo:"0068", nome:"PE SALGADO", preco:13.99},
+  {codigo:"0053", nome:"PEITO", preco:14.99},
+  {codigo:"0036", nome:"PERNIL COM OSSO", preco:12.99},
+  {codigo:"0035", nome:"PERNIL PICADO", preco:16.99},
+  {codigo:"0019", nome:"PICADAO BOVINO", preco:33.99},
+  {codigo:"0002", nome:"PICANHA", preco:74.99},
+  {codigo:"0034", nome:"PICANHA ESPECIAL", preco:79.99},
+  {codigo:"0114", nome:"PICANHA ESTANCIA KG", preco:99.00},
+  {codigo:"0103", nome:"PICANHA SUINA", preco:24.99},
+  {codigo:"0027", nome:"PONTA DE AGULHA", preco:23.99},
+  {codigo:"0080", nome:"RABADA", preco:39.99},
+  {codigo:"0086", nome:"RABO SALGADO", preco:24.99},
+  {codigo:"0082", nome:"SALGADOS 29,99 KG", preco:29.99},
+  {codigo:"0070", nome:"SALSICHA AURORA", preco:10.99},
+  {codigo:"0072", nome:"SALSICHA HOT DOG", preco:10.99},
+  {codigo:"0069", nome:"SALSICHA PERDIGAO", preco:13.99},
+  {codigo:"0071", nome:"SALSICHA SADIA", preco:13.99},
+  {codigo:"0089", nome:"SOBRE COXA", preco:14.99},
+  {codigo:"0013", nome:"TIRINHA", preco:19.99},
+  {codigo:"0044", nome:"TOSCANINHA", preco:31.99},
+  {codigo:"0039", nome:"TOUCINHO", preco:12.99},
+  {codigo:"0120", nome:"TOUCINHO GRIL KG", preco:16.99},
+  {codigo:"0057", nome:"TULIPA", preco:27.99}
 ];
 
 var itensLista = document.getElementById("itens-lista");
@@ -497,6 +488,8 @@ function criarLinhaItem(){
   linha.innerHTML =
     '<div class="produto-wrap">' +
       '<input type="text" class="item-produto" placeholder="Picanha, fraldinha, linguiça..." autocomplete="off">' +
+      '<div class="produto-info"></div>' +
+      '<input type="hidden" class="item-codigo">' +
       '<div class="sugestoes"></div>' +
     '</div>' +
     '<input type="number" step="0.1" min="0" class="item-qtd" placeholder="Qtd">' +
@@ -523,13 +516,16 @@ itensLista.addEventListener("input", function(evento){
   fecharTodasSugestoes();
   if (!termo){ return; }
   var resultados = produtos.filter(function(p){
-    return p.toLowerCase().indexOf(termo) !== -1;
+    return p.nome.toLowerCase().indexOf(termo) !== -1;
   }).slice(0, 6);
   if (resultados.length === 0){ return; }
   resultados.forEach(function(p){
     var opcao = document.createElement("div");
     opcao.className = "sugestao-item";
-    opcao.textContent = p;
+    opcao.textContent = p.nome + " — R$ " + p.preco.toFixed(2).replace(".", ",") + "/Kg";
+    opcao.dataset.nome = p.nome;
+    opcao.dataset.codigo = p.codigo;
+    opcao.dataset.preco = p.preco;
     lista.appendChild(opcao);
   });
   lista.style.display = "block";
@@ -538,7 +534,17 @@ itensLista.addEventListener("input", function(evento){
 itensLista.addEventListener("click", function(evento){
   if (!evento.target.classList.contains("sugestao-item")){ return; }
   var wrap = evento.target.closest(".produto-wrap");
-  wrap.querySelector(".item-produto").value = evento.target.textContent;
+  var linha = evento.target.closest(".item-row");
+  var nome = evento.target.dataset.nome;
+  var codigo = evento.target.dataset.codigo;
+  var preco = Number(evento.target.dataset.preco);
+  wrap.querySelector(".item-produto").value = nome;
+  linha.querySelector(".item-codigo").value = codigo;
+  var infoEl = wrap.querySelector(".produto-info");
+  infoEl.textContent = "Cód. " + codigo + " · R$ " + preco.toFixed(2).replace(".", ",") + "/Kg";
+  infoEl.style.display = "block";
+  var unidadeSelect = linha.querySelector(".item-unidade");
+  if (unidadeSelect){ unidadeSelect.value = "Kg"; }
   fecharTodasSugestoes();
 });
 
@@ -591,11 +597,12 @@ form.addEventListener("submit", function(evento){
   var itens = [];
   linhas.forEach(function(linha){
     var produto = linha.querySelector(".item-produto").value.trim();
+    var codigo = linha.querySelector(".item-codigo").value.trim();
     var qtd = linha.querySelector(".item-qtd").value.trim();
     var unidade = linha.querySelector(".item-unidade").value;
     var obs = linha.querySelector(".item-obs").value.trim();
     if (produto && qtd && Number(qtd) > 0){
-      itens.push({ produto: produto, quantidade: Number(qtd), unidade: unidade, observacao: obs });
+      itens.push({ produto: produto, codigo: codigo, quantidade: Number(qtd), unidade: unidade, observacao: obs });
     }
   });
 
@@ -604,23 +611,20 @@ form.addEventListener("submit", function(evento){
   btnEnviar.disabled = true;
   btnEnviar.textContent = "Enviando...";
 
-  var pedido = {
-    nome: nome,
-    telefone: telefone,
-    data_retirada: dataRetirada,
-    periodo: periodoSelecionado,
-    itens: itens,
-    enviado_em: new Date().toISOString()
-  };
-
   canal.send({
     type: "broadcast",
     event: "pedido",
-    payload: pedido
+    payload: {
+      nome: nome,
+      telefone: telefone,
+      data_retirada: dataRetirada,
+      periodo: periodoSelecionado,
+      itens: itens,
+      enviado_em: new Date().toISOString()
+    }
   }).then(function(){
     form.style.display = "none";
     document.getElementById("confirmacao").style.display = "block";
-    gerarEBaixarTicket(pedido);
   }).catch(function(){
     btnEnviar.disabled = false;
     btnEnviar.textContent = "Enviar pedido";
