@@ -601,6 +601,15 @@ function selecionarPeriodo(valor){
 btnManha.addEventListener("click", function(){ selecionarPeriodo("manha"); });
 btnTarde.addEventListener("click", function(){ selecionarPeriodo("tarde"); });
 
+var MESES_ABREV = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+function formatarDataBr(dataIso){
+  var partes = dataIso.split("-");
+  var ano = partes[0];
+  var mes = parseInt(partes[1], 10);
+  var dia = parseInt(partes[2], 10);
+  return dia + " de " + MESES_ABREV[mes - 1] + ". de " + ano;
+}
+
 var dataRetiradaInput = document.getElementById("data-retirada");
 var hoje = new Date().toISOString().split("T")[0];
 dataRetiradaInput.min = hoje;
@@ -671,12 +680,12 @@ form.addEventListener("submit", function(evento){
     var textoPedido =
       "Center Carnes Boizão Du Capricho\n" +
       "Pedido de " + nome + " — " + telefone + "\n" +
-      "Retirada: " + dataRetirada + " (" + periodoSelecionado + ")\n\n" +
+      "Retirada: " + formatarDataBr(dataRetirada) + " (" + periodoSelecionado + ")\n\n" +
       "Itens:\n" + linhasResumo;
 
     var resumoEl = document.getElementById("resumo-pedido");
     resumoEl.innerHTML =
-      "<div><strong>Retirada:</strong> " + dataRetirada + " — " + periodoSelecionado + "</div>" +
+      "<div><strong>Retirada:</strong> " + formatarDataBr(dataRetirada) + " — " + periodoSelecionado + "</div>" +
       "<div class=\"resumo-itens\">" +
       itens.map(function(item){
         var codigoTxt = item.codigo ? " <small>(Cód. " + item.codigo + ")</small>" : "";
