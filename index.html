@@ -270,6 +270,10 @@ input:focus,select:focus{
 .manutencao .card:not(#aviso-manutencao) { display: none !important; }
 #aviso-manutencao { display: none; padding: 24px 20px; }
 .manutencao #aviso-manutencao { display: block; }
+
+.fechado .card:not(#aviso-manutencao):not(#aviso-fechado) { display: none !important; }
+#aviso-fechado { display: none; padding: 24px 20px; }
+.fechado #aviso-fechado { display: block; }
 </style>
 </head>
 <body>
@@ -298,6 +302,14 @@ input:focus,select:focus{
 </header>
 
 <main>
+
+<div id="aviso-fechado" class="card">
+  <h2 style="text-align:center;">Estamos fechados no momento</h2>
+  <p style="text-align:center;">
+    Segunda a sábado: <strong>07:40 às 19:00</strong>.<br>Domingos e feriados: <strong>07:40 às 13:00</strong>.<br><br>
+    Volte dentro desse horário pra fazer seu pedido, ou nos chame pelo WhatsApp!
+  </p>
+</div>
 
 <div id="aviso-manutencao" class="card">
   <h2 style="text-align:center;">Sistema em manutenção</h2>
@@ -651,6 +663,11 @@ form.addEventListener("submit", function(evento){
   evento.preventDefault();
   limparErro();
 
+  if (!lojaEstaAberta()){
+    mostrarErro("Estamos fechados no momento. Seg-sáb: 07:40 às 19:00. Dom e feriados: 07:40 às 13:00.");
+    return;
+  }
+
   var nome = document.getElementById("nome").value.trim();
   var telefone = document.getElementById("telefone").value.trim();
   var dataRetirada = dataRetiradaInput.value;
@@ -745,9 +762,58 @@ form.addEventListener("submit", function(evento){
 
 
 <script>
+  // Feriados nacionais de 2026 (formato AAAA-MM-DD).
+  // IMPORTANTE: essa lista precisa ser atualizada todo ano — as datas mudam.
+  // Pode adicionar aqui também feriados municipais/estaduais específicos da cidade da loja.
+  var FERIADOS = [
+    "2026-01-01", // Confraternização Universal
+    "2026-04-03", // Paixão de Cristo
+    "2026-04-21", // Tiradentes
+    "2026-05-01", // Dia do Trabalho
+    "2026-09-07", // Independência do Brasil
+    "2026-10-12", // Nossa Senhora Aparecida
+    "2026-11-02", // Finados
+    "2026-11-15", // Proclamação da República
+    "2026-11-20", // Consciência Negra
+    "2026-12-25"  // Natal
+  ];
+
+  function lojaEstaAberta(){
+    var agora = new Date();
+
+    // Data (AAAA-MM-DD) no fuso de São Paulo, pra checar feriado e dia da semana
+    var dataSaoPaulo = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo"
+    }).format(agora); // formato: 2026-09-25
+
+    // Meio-dia evita qualquer problema de fuso na hora de descobrir o dia da semana
+    var diaDaSemana = new Date(dataSaoPaulo + "T12:00:00").getDay(); // 0 = domingo, 6 = sábado
+
+    var ehDomingo = (diaDaSemana === 0);
+    var ehFeriado = FERIADOS.indexOf(dataSaoPaulo) !== -1;
+
+    var horaSaoPaulo = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    }).format(agora);
+    var partes = horaSaoPaulo.split(":");
+    var minutosAgora = parseInt(partes[0], 10) * 60 + parseInt(partes[1], 10);
+
+    var abertura = 7 * 60 + 40;  // 07:40, todo dia
+
+    // Domingo e feriado fecham mais cedo (13:00); segunda a sábado vai até 19:00
+    var fechamento = (ehDomingo || ehFeriado) ? (13 * 60) : (19 * 60);
+
+    return minutosAgora >= abertura && minutosAgora < fechamento;
+  }
+
   document.addEventListener("DOMContentLoaded", function(){
     if (typeof MANUTENCAO_ATIVA !== "undefined" && MANUTENCAO_ATIVA) {
       document.body.classList.add("manutencao");
+    } else if (!lojaEstaAberta()) {
+      document.body.classList.add("fechado");
     }
   });
 </script>
