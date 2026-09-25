@@ -266,9 +266,20 @@ input:focus,select:focus{
   font-size:15px;
   cursor:pointer;
 }
+
+.manutencao .card:not(#aviso-manutencao) { display: none !important; }
+#aviso-manutencao { display: none; padding: 24px 20px; }
+.manutencao #aviso-manutencao { display: block; }
 </style>
 </head>
 <body>
+
+<script>
+  // ============================================
+  // MODO MANUTENÇÃO — troque para false quando a impressora voltar a funcionar
+  var MANUTENCAO_ATIVA = true;
+  // ============================================
+</script>
 
 <div class="aviso-ios" id="aviso-ios">
   Instale este app: toque em Compartilhar e depois em "Adicionar à Tela de Início".
@@ -287,6 +298,16 @@ input:focus,select:focus{
 </header>
 
 <main>
+
+<div id="aviso-manutencao" class="card">
+  <h2 style="text-align:center;">Sistema em manutenção</h2>
+  <p style="text-align:center;">
+    Estamos com um probleminha técnico no sistema de pedidos online.<br><br>
+    <strong>Peça pelo WhatsApp normalmente</strong> que a gente já te atende!<br><br>
+    Voltamos ao normal em breve.
+  </p>
+</div>
+
   <div class="card">
 
     <form id="form-pedido">
@@ -722,5 +743,13 @@ form.addEventListener("submit", function(evento){
 });
 </script>
 
+
+<script>
+  document.addEventListener("DOMContentLoaded", function(){
+    if (typeof MANUTENCAO_ATIVA !== "undefined" && MANUTENCAO_ATIVA) {
+      document.body.classList.add("manutencao");
+    }
+  });
+</script>
 </body>
 </html>
