@@ -7,6 +7,8 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3C0E0A">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="apple-touch-icon.png" type="image/png">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Center Carnes">
@@ -676,6 +678,18 @@ form.addEventListener("submit", function(evento){
   if (!telefone){ mostrarErro("Preencha seu telefone."); return; }
   if (!dataRetirada){ mostrarErro("Escolha a data de retirada."); return; }
   if (!periodoSelecionado){ mostrarErro("Escolha o período: manhã ou tarde."); return; }
+
+  // Data de hoje no fuso de São Paulo (AAAA-MM-DD)
+  var hojeSP = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  if (dataRetirada < hojeSP){ mostrarErro("Escolha uma data de hoje em diante."); return; }
+
+  // Domingo e feriado: só manhã (loja fecha 13:00)
+  var diaRetirada = new Date(dataRetirada + "T12:00:00").getDay();
+  var diaCurto = diaRetirada === 0 || FERIADOS.indexOf(dataRetirada) !== -1;
+  if (diaCurto && periodoSelecionado === "tarde"){
+    mostrarErro("Domingos e feriados abrimos só de manhã (até 13:00). Escolha Manhã.");
+    return;
+  }
 
   var linhas = itensLista.querySelectorAll(".item-row");
   var itens = [];
